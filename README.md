@@ -124,9 +124,9 @@ All 56 bonus cases have exact state or complete adaptive branch/channel
 certificates. The changed D(10,5) circuit has a fresh circuit-bound Choi proof;
 sampled measurement outcomes are not used as an exactness certificate.
 The notebook's functions match the standalone module, and its returned bonus
-circuits match all 56 verified records. The local `score_solution(validator)`
-helper requires an exact validator callback; it does not silently substitute
-sampling for all-branch verification. Simulated noise estimates are not
+circuits match all 56 verified records. The original `score_solution()`
+interface is preserved and expects the organizer's `validate_circuit` function;
+its loop is corrected to the confirmed N<=15 domain. Simulated noise estimates are not
 hardware measurements.
 
 ## How we built it

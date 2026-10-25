@@ -28,8 +28,8 @@ exact state or all-branch verification; preserved native gates and readout
 constraints; and matched the notebook functions to the standalone module.
 The official reference notebook outside this repository was not changed.
 The repository notebook corrects the set-length partial-trace bug and uses the
-confirmed N<=15 bonus range. Its bonus score helper requires an explicit exact
-validator rather than relying on an undefined global or sampled branches.
+confirmed N<=15 bonus range. Its bonus score helper preserves the original
+zero-argument interface and expects the organizer's `validate_circuit` function.
 
 ## Accepted-source prompt archive
 
