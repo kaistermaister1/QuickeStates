@@ -10,7 +10,8 @@ Built for DuQuantum 2026 (Google Quantum AI Dicke-state challenge) by Kai Sandbe
 |---|---|
 | `src/dicke_compiler/`, `pyproject.toml`, `LICENSE` | The `quicke-states` Python library ([PyPI](https://pypi.org/project/quicke-states/)). |
 | `willow_dicke.py` | Our challenge submission: a standalone `create_dicke_state(...)` and `create_dicke_state_adaptive(...)` (bonus). |
-| `DuQuantum_Google_Standard.ipynb` | The official challenge notebook with both functions implemented, using the same code as `willow_dicke.py`. |
+| `DuQuantum_Google_Standard.ipynb` | The challenge notebook with the same final functions embedded for standalone submission. |
+| `PROMPTS.md` | AI prompt provenance, kept outside the executable code. |
 
 ## Inspiration
 
@@ -91,35 +92,42 @@ circuit, qubits = create_dicke_state(
 circuit, qubits = create_dicke_state_adaptive(10, 3)  # bonus: fewest moments
 ```
 
-`create_dicke_state` returns a measurement-free circuit of CZ gates on calibrated couplers and `cirq.PhasedXZGate`s on calibrated qubits. It works as follows:
+`willow_dicke.py` and the notebook are self-contained: neither loads project
+files, downloads data, or imports the other submission file. Circuit tables are
+stored as compressed data. AI prompts are in [PROMPTS.md](PROMPTS.md).
 
-1. **Candidates.** It gathers exact constructions for `D(N, min(n, N−n))`. These include:
-   - W-state broadcast trees;
-   - numerically synthesized templates and peephole-optimized circuits;
-   - divide-and-conquer constructions;
-   - a support-pruned nearest-neighbour Bärtschi–Eidenbenz chain.
+`create_dicke_state` returns a measurement-free circuit of full CZ gates on
+calibrated couplers and `cirq.PhasedXZGate`s on calibrated qubits. It combines
+verified stored templates with analytic constructions, ranks placements using
+the supplied gate/readout calibration, and checks the complete noiseless state
+before returning. The accepted phase rewrites require both the tested template
+and its exact physical mapping. Other placements retain the existing circuit.
+Problem 1 supports inputs through N=20 and preserves the previously verified
+circuits and noise-model results.
 
-   For `n > N/2` it prepares the complement and flips every output qubit.
-2. **Placement.** A beam search embeds each candidate on the supplied hardware graph. It minimizes CZ, single-qubit and readout error costs, and skips broken qubits and couplers.
-3. **Scheduling.** CZ and single-qubit layers alternate, scheduled as late as possible so qubits stay in |0⟩ longer. Z rotations are pushed through, and dynamical decoupling is tried on idle qubits.
-4. **Selection.** Candidates are ranked by an estimate of gate, readout and idle errors. The best one that passes a noiseless statevector check and the 1750-moment limit is returned.
-
-`create_dicke_state_adaptive` returns the circuit with the fewest moments among two options:
-
-- adaptive constructions that use mid-circuit measurement and feed-forward;
-- depth-minimal brickwork circuits.
+`create_dicke_state_adaptive` returns a fresh circuit and output set for every
+confirmed bonus case: 2 <= N <= 15 and 1 <= k <= floor(N/2). It uses the
+shallowest verified circuit per case from the updated bonus portfolio and the
+previously accepted constructions. Measurement and feed-forward are included
+where beneficial, with native gates and complete physical readout diagonals.
+The resulting sum of N*k/depth over the 56 bonus cases is **58.2494121378094**.
 
 ### Validation
 
-We ran the notebook's own code cells on a fake calibration from its `generate_*` functions. `create_dicke_state` produced the exact Dicke state for all 56 challenge instances (2 ≤ N ≤ 15, 1 ≤ n ≤ ⌊N/2⌋), with 1 − F below 1e-13. Every circuit:
+The final module is checked on all 56 main challenge cases with two independent
+test calibrations, all 56 actual QVM circuit bindings, and seven larger cases
+through N=20. Checks cover complete noiseless amplitudes, allowed gates and
+couplers, readout calibration, Willow validation, serialization, the
+1750-moment limit, the one-minute construction limit, and runtime isolation.
 
-- passed `cirq_google.Willow105.validate_circuit`;
-- used CZ only on calibrated couplers and `PhasedXZGate` only on calibrated qubits;
-- had no measurements and at most 127 moments.
-
-The slowest build took 11.4 s, well under the one-minute limit.
-
-For all 56 bonus instances, the notebook's `create_dicke_state_adaptive` returns the same circuits as `willow_dicke.py`. We also simulated 54 of them without noise and confirmed they are exact, using four random measurement seeds for the adaptive ones. D(10,5) and D(13,6) were too large to simulate: they use 69 and 20 qubits.
+All 56 bonus cases have exact state or complete adaptive branch/channel
+certificates. The changed D(10,5) circuit has a fresh circuit-bound Choi proof;
+sampled measurement outcomes are not used as an exactness certificate.
+The notebook's functions match the standalone module, and its returned bonus
+circuits match all 56 verified records. The local `score_solution(validator)`
+helper requires an exact validator callback; it does not silently substitute
+sampling for all-branch verification. Simulated noise estimates are not
+hardware measurements.
 
 ## How we built it
 
