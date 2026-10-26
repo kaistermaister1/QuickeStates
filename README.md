@@ -1,8 +1,6 @@
-# QuickeStates
+# Google Quantum AI @ DuQuantum - Qgars Submission - QuickeStates
 
-Exact, hardware-aware Dicke-state preparation circuits for Google's Willow processor.
-
-Built for DuQuantum 2026 (Google Quantum AI Dicke-state challenge) by Kai Sandberg, Will and Ben.
+Hardware-tuned Dicke-state preparation circuits for Google's Willow processor. By Kai Sandberg, Will Ott and Ben Pinoli.
 
 ## What's in this repository
 
@@ -11,7 +9,7 @@ Built for DuQuantum 2026 (Google Quantum AI Dicke-state challenge) by Kai Sandbe
 | `src/dicke_compiler/`, `pyproject.toml`, `LICENSE` | The `quicke-states` Python library ([PyPI](https://pypi.org/project/quicke-states/)). |
 | `willow_dicke.py` | Our challenge submission: a standalone `create_dicke_state(...)` and `create_dicke_state_adaptive(...)` (bonus). |
 | `DuQuantum_Google_Standard.ipynb` | The challenge notebook with the same final functions embedded for standalone submission. |
-| `PROMPTS.md` | AI prompt provenance, kept outside the executable code. |
+| `PROMPTS.md` | AI prompt log for implementing code. |
 
 ## Inspiration
 
@@ -19,13 +17,13 @@ Dicke states are useful in quantum algorithms. Researchers have developed severa
 
 ## What it does
 
-QuickeStates is an importable Python library that gives users efficient Dicke-state preparation circuits tuned to their hardware and error rates. The user specifies:
+QuickeStates is an importable Python library that gives users efficient Dicke-state preparation circuits tuned to their hardware and error rates. We developed and benchmarked it for follow, but the framework is portable to other devices. The user specifies:
 
 - the hardware device;
 - the desired Dicke state;
 - error rates for CZ gates, single-qubit unitaries and qubit measurements.
 
-Across 27 benchmark cases, our circuits averaged 70.2% fewer CZ gates and 80.7% less circuit depth than our naive Bärtschi-SCS baseline. They also improved fidelity indicators threefold.
+Across 27 benchmark cases, our circuits averaged 70.2% fewer CZ gates and 80.7% less circuit depth than our naive Bärtschi-SCS baseline. They also improved scores (correlated with fidelity) threefold. The baseline constructs the noise-free SCS-blocked circuit, places it on the first available place using a simple BFS, and fills in missing connections with SWAP gates.
 
 ## Installation
 
@@ -81,17 +79,6 @@ Every result records the construction it used, before/after metrics and verifica
 
 ## Using the challenge submission
 
-`willow_dicke.py` imports only `cirq`, `cirq_google`, their dependencies and the Python standard library, as the challenge requires. The calibration dictionaries use the notebook's format; the notebook's `generate_*` functions produce fake ones for testing.
-
-```python
-from willow_dicke import create_dicke_state, create_dicke_state_adaptive
-
-circuit, qubits = create_dicke_state(
-    10, 3, cz_pauli_error_rate, sq_pauli_error_rate, zero_errors, one_errors
-)
-circuit, qubits = create_dicke_state_adaptive(10, 3)  # bonus: fewest moments
-```
-
 `willow_dicke.py` and the notebook are self-contained: neither loads project
 files, downloads data, or imports the other submission file. Circuit tables are
 stored as compressed data. AI prompts are in [PROMPTS.md](PROMPTS.md).
@@ -112,32 +99,14 @@ previously accepted constructions. Measurement and feed-forward are included
 where beneficial, with native gates and complete physical readout diagonals.
 The resulting sum of N*k/depth over the 56 bonus cases is **58.2494121378094**.
 
-### Validation
-
-The final module is checked on all 56 main challenge cases with two independent
-test calibrations, all 56 actual QVM circuit bindings, and seven larger cases
-through N=20. Checks cover complete noiseless amplitudes, allowed gates and
-couplers, readout calibration, Willow validation, serialization, the
-1750-moment limit, the one-minute construction limit, and runtime isolation.
-
-All 56 bonus cases have exact state or complete adaptive branch/channel
-certificates. The changed D(10,5) circuit has a fresh circuit-bound Choi proof;
-sampled measurement outcomes are not used as an exactness certificate.
-The notebook's functions match the standalone module, and its returned bonus
-circuits match all 56 verified records. The original `score_solution()`
-interface is preserved and expects the organizer's `validate_circuit` function;
-its loop is corrected to the confirmed N<=15 domain. Simulated noise estimates are not
-hardware measurements.
-
 ## How we built it
 
-We reviewed five papers and ran several experiments to find out which techniques held up under errors. We then handed those techniques to LLMs for heavy, specialized optimization. Approaches we explored include:
+We reviewed several papers and ran experiments to find out which techniques held up under errors. We then handed those techniques to LLMs for heavy, specialized optimization. Approaches we explored include:
 
 - Dijkstra's algorithm for Bärtschi's 1D Dicke-state construction;
 - recursive and divide-and-conquer constructions;
 - delete-and-tune optimization loops.
-
-Several agentic models ran for more than 15 hours while we fed them our data and the insights from our experiments.
+- Numerical optimization with ADAM and BFGS
 
 ## Challenges we ran into
 
