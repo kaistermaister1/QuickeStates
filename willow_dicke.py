@@ -1,27 +1,30 @@
-"""Willow Dicke preparation: choose an exact circuit, then adapt its placement.
+"""Willow Dicke preparation: choose an (exact) Dicke preparation circuit, then adapt 
+its placement on the hardware.
 
 Five steps in create_dicke_state(N, k, CZ errors, 1q errors, readout 0/1 errors):
 1. Normalize: validate N,k and keep calibrated Willow105 qubits/couplers. Use
    weight min(k,N-k); append X on every output when the requested k is larger.
-2. Get candidates: load saved native circuits (249 across 58 reduced (N,k)
-   cases; five for D(8,4)). Offline work combined W trees, unary/SCS recursion,
-   divide-and-conquer count splitting, and numerical synthesis. Numerical
-   synthesis fits rotation angles to the ideal target; delete-and-refit removes
-   gates, then fits again. Local compression preserves only reachable block
-   inputs, with their relative phases; global compression fits the whole state.
-   These searches ran offline, not on each call. If templates are missing or
-   cannot be placed, build our analytic sliding-unary variation: five-CNOT
-   reflect blocks, fused four-CZ top rows, and a six-CZ weight-two end block.
+   
+2. Get candidates: load saved native circuits (249 across 58 reduced (N,k) cases; 
+   five for D(8,4)). Precomputation combined W trees, unary/SCS recursion, 
+   divide-and-conquer count splitting, and numerical synthesis. Numerical synthesis 
+   fits rotation angles to the ideal target using ADAM and BFGS; delete-and-refit 
+   removes gates, then fits again. Local compression  preserves only reachable 
+   block inputs, with their relative phases; global compression  fits the whole 
+   state. If templates are missing or cannot be placed, build our analytic 
+   sliding-unary variation: five-CNOT reflect blocks, fused four-CZ top rows, and a 
+   six-CZ weight-two end block.
+   
 3. Compile/place: saved circuits already contain full CZ + PhasedXZ gates and
    parallel time layers (Cirq moments). The analytic fallback decomposes local
    blocks, merges 1q gates and packs operations EARLIEST. Try grid translations,
-   rotations/reflections, the original placement, and a bounded beam search
-   (keep 384 promising partial assignments; fallback 1024), not all mappings.
-   Required logical edges must exist physically; no routing SWAPs are added.
-   ALAP means delaying preparation until needed to reduce exposed idle time;
-   DD means echo pulses during idles to refocus slow phase errors. Both were
-   explored upstream. This module preserves saved moments and adds neither
+   rotations/reflections, the original placement, and a bounded beam search, 
+   not all mappings. Required logical edges must exist physically; no routing 
+   SWAPs are added. ALAP means delaying preparation until needed to reduce exposed 
+   idle time; DD means echo pulses during idles to refocus slow phase errors. Both 
+   were explored upstream. This module preserves saved moments and adds neither
    an ALAP pass nor new DD pulses; its runtime noise model has no idle decay.
+   
 4. Rank: fast custom cost = gate-count-weighted error + readout survival loss
    + a penalty for unequal readout asymmetry across outputs. Placement uses
    p + 0.25*sigma (clipped), not 0.8*p_CZ or 0.67*p_1q. For N<=8, refine up
@@ -33,6 +36,7 @@ Five steps in create_dicke_state(N, k, CZ errors, 1q errors, readout 0/1 errors)
    No T1, Tphi, coherent phases, or correlations are inferred from the inputs.
    Expected notebook loss is a score denominator, not state infidelity; larger
    N uses only the fast cost. Neither estimate guarantees a hardware score.
+   
 5. Finalize: optionally apply an offline model-tested Pauli/native-phase recipe
    only when both the circuit fingerprint and physical placement match. Frames
    change intermediate gates while closing to the same ideal unitary (up to
@@ -48,10 +52,10 @@ It takes no error maps and does not run the five-step calibrated selector.
 
 Our roles: humans set the research direction, studied papers, ran experiments,
 and supplied mathematical insights and validation criteria. LLM agents did
-most implementation and intensive optimization/search, driving the largest
-improvements. PROMPTS.md records the collaboration; no LLM runs in this API.
+most implementation and intensive optimization/search based on our input and their own 
+research. PROMPTS.md records the collaboration.
 
-Method lineage (adaptations, not verbatim implementations):
+Relevant papers:
 - Bärtschi & Eidenbenz (2019), https://arxiv.org/abs/1904.07358:
   deterministic unary/SCS recursion; adapted into a sliding nearest-neighbor sweep.
 - Mukherjee et al. (2020), https://arxiv.org/abs/2007.01681:
@@ -61,9 +65,8 @@ Method lineage (adaptations, not verbatim implementations):
 - Buhrman et al. (2024), https://arxiv.org/abs/2307.14840:
   shallow circuits with measurement/feedforward; background for adaptive variants.
 - Hahn (1950), https://doi.org/10.1103/PhysRev.80.580:
-  spin-echo principle behind upstream DD experiments, not a runtime pass here.
+  spin-echo principle behind upstream DD experiments.
 
-Keep willow_dicke_data.py beside this module; it holds the lossless packed tables.
 """
 
 
