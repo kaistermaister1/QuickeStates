@@ -1,4 +1,4 @@
-# Google Quantum AI @ DuQuantum - Qgars Submission - QuickeStates
+# Google Quantum AI @ DuQuantum - QuickeStates
 
 Hardware-tuned Dicke-state preparation circuits for Google's Willow processor. By Kai Sandberg, Will Ott and Ben Pinoli.
 
