@@ -1,4 +1,11 @@
-## Prompts I gave AI
+## How we used AI to do science
+From the start, we instructed agents to design, implement, and optimize circuits that maximized the score function. As they worked, we spent 5-6 hours learning about Dicke state preparation and reading through literature. Working mostly unsupervised, the agents plateaued after a few hours. By that point, we had enough formed several hypothesis regarding efficient Dicke state preparation and experiments to test those hypothesis. This was our work loop for the remainder of the challenge: separate agents implemented our experiments; we used that information to orchestrate the efforts of the coding agents. This accelerated the progress of the agents that had plateaued on their own.
+
+We used Claude Code + Codex as coding agents. They were divided into 'AI teams' - each Opus 5.5 / Astra 6 duo was instructed to discuss, plan, delegate, implement, review, and iterate together, reviewing each other's code before making definite changes. The teams were told to compete with each other for highest score and worked on loop for the entire 24hr challenge. We noticed they would often catch small mathematical and coding flaws and their results were stronger than working individually. A log of their prompts to each other is recorded beneath the "Prompts we gave AI" section.
+
+Below are prompts used to generate the code in "willow_dicke.py". Conversations used to conduct experiments, enhance knowledge of literature, and test new ideas mathematically are not included.
+
+## Prompts we gave AI
 
 - So, available qubits and allowed cz pairs defines a graph. Can you create a very simple concise jupyter notebook to visualize that graph, like how the showed the Willow chip in the paper? With a couple examples. Full permissions to use and install any libraries needed.
 
